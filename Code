@@ -1,0 +1,221 @@
+#include <LiquidCrystal.h>
+#include <Control_Surface.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <Wire.h>
+#include <Keyboard.h>
+
+USBMIDI_Interface midi;
+
+//MULTIPLEXER
+CD74HC4051 mux = {
+  A0,
+  {5, 6, 7}
+};
+
+//POTENTIOMETERS
+CCPotentiometer potentiometers [] {
+  {mux.pin(0), {1, CHANNEL_1}},
+  {mux.pin(1), {5, CHANNEL_1}},
+  {mux.pin(2), {3, CHANNEL_1}},
+  {mux.pin(3), {7, CHANNEL_1}},
+  {mux.pin(4), {2, CHANNEL_1}},
+  {mux.pin(5), {6, CHANNEL_1}},
+  {mux.pin(6), {4, CHANNEL_1}},
+  {mux.pin(7), {8, CHANNEL_1}},
+};
+
+//PWM MODULE
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
+//LCD DISPLAY
+LiquidCrystal lcd(A3, A2, 15, 14, 10, A1);
+int Contrast = 100;
+
+void setup()
+{
+  Control_Surface.begin();
+
+  //BUTTON PINS
+  pinMode(4, INPUT_PULLUP);
+  pinMode(8, INPUT_PULLUP);
+  pinMode(9, INPUT_PULLUP);
+
+  Keyboard.begin();
+
+  mux.begin();
+
+  pwm.begin();
+
+  pwm.setPWMFreq(200);
+  Serial.begin(9600);
+
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  analogWrite(6, Contrast);
+  lcd.begin(16, 2);
+  lcd.setCursor(2, 0);
+  lcd.print("CRIUS DIGITAL");
+  lcd.setCursor(5, 1);
+  lcd.print("STUDIO");
+  delay(3000);
+  lcd.clear();
+}
+
+void loop()
+{
+  Control_Surface.loop();
+
+  //BUTTONS
+  if (digitalRead(4) == LOW) {
+    Keyboard.press(KEY_F9);
+    delay(200);
+    Keyboard.releaseAll();
+  }
+  if (digitalRead(8) == LOW) {
+    Keyboard.press(' ');
+    delay(200);
+    Keyboard.releaseAll();
+  }
+  if (digitalRead(9) == LOW) {
+    Keyboard.press(' ');
+    delay(200);
+    Keyboard.releaseAll();
+  }
+
+  int POT1 = mux.analogRead(0);
+  int POT2 = mux.analogRead(4);
+  int POT3 = mux.analogRead(2);
+  int POT4 = mux.analogRead(6);
+  int POT5 = mux.analogRead(1);
+  int POT6 = mux.analogRead(5);
+  int POT7 = mux.analogRead(3);
+  int POT8 = mux.analogRead(7);
+
+  POT1 = map(POT1, 0, 1023, 0, 4092);
+  POT2 = map(POT2, 0, 1023, 0, 4092);
+  POT3 = map(POT3, 0, 1023, 0, 4092);
+  POT4 = map(POT4, 0, 1023, 0, 4092);
+  POT5 = map(POT5, 0, 1023, 0, 4092);
+  POT6 = map(POT6, 0, 1023, 0, 4092);
+  POT7 = map(POT7, 0, 1023, 0, 4092);
+  POT8 = map(POT8, 0, 1023, 0, 4092);
+
+  pwm.setPWM(0, 0, POT1);
+  pwm.setPWM(1, 0, POT2);
+  pwm.setPWM(2, 0, POT3);
+  pwm.setPWM(3, 0, POT4);
+  pwm.setPWM(4, 0, POT5);
+  pwm.setPWM(5, 0, POT6);
+  pwm.setPWM(6, 0, POT7);
+  pwm.setPWM(7, 0, POT8);
+
+  int LcdPot1 = mux.analogRead(0) / 10.23;
+  int LcdPot2 = mux.analogRead(4) / 10.23;
+  int LcdPot3 = mux.analogRead(2) / 10.23;
+  int LcdPot4 = mux.analogRead(6) / 10.23;
+  int LcdPot5 = mux.analogRead(1) / 10.23;
+  int LcdPot6 = mux.analogRead(5) / 10.23;
+  int LcdPot7 = mux.analogRead(3) / 10.23;
+  int LcdPot8 = mux.analogRead(7) / 10.23;
+
+  lcd.setCursor(0, 0);
+  lcd.print(LcdPot1);
+  if (LcdPot1 < 100) {
+    lcd.setCursor(2, 0);
+    lcd.print(" ");
+  }
+  if (LcdPot1 < 10) {
+    lcd.setCursor(1, 0);
+    lcd.print(" ");
+  }
+  lcd.setCursor(3, 0);
+  lcd.print(" ");
+
+  lcd.setCursor(4, 0);
+  lcd.print(LcdPot2);
+  if (LcdPot2 < 100) {
+    lcd.setCursor(6, 0);
+    lcd.print(" ");
+  }
+  if (LcdPot2 < 10) {
+    lcd.setCursor(5, 0);
+    lcd.print(" ");
+  }
+  lcd.setCursor(7, 0);
+  lcd.print(" ");
+
+  lcd.setCursor(8, 0);
+  lcd.print(LcdPot3);
+  if (LcdPot3 < 100) {
+    lcd.setCursor(10, 0);
+    lcd.print(" ");
+  }
+  if (LcdPot3 < 10) {
+    lcd.setCursor(9, 0);
+    lcd.print(" ");
+  }
+  lcd.setCursor(11, 0);
+  lcd.print(" ");
+
+  lcd.setCursor(12, 0);
+  lcd.print(LcdPot4);
+  if (LcdPot4 < 100) {
+    lcd.setCursor(14, 0);
+    lcd.print(" ");
+  }
+  if (LcdPot4 < 10) {
+    lcd.setCursor(13, 0);
+    lcd.print(" ");
+  }
+
+  lcd.setCursor(0, 1);
+  lcd.print(LcdPot5);
+  if (LcdPot5 < 100) {
+    lcd.setCursor(2, 1);
+    lcd.print(" ");
+  }
+  if (LcdPot5 < 10) {
+    lcd.setCursor(1, 1);
+    lcd.print(" ");
+  }
+  lcd.setCursor(3, 1);
+  lcd.print(" ");
+
+  lcd.setCursor(4, 1);
+  lcd.print(LcdPot6);
+  if (LcdPot6 < 100) {
+    lcd.setCursor(6, 1);
+    lcd.print(" ");
+  }
+  if (LcdPot6 < 10) {
+    lcd.setCursor(5, 1);
+    lcd.print(" ");
+  }
+  lcd.setCursor(7, 1);
+  lcd.print(" ");
+
+  lcd.setCursor(8, 1);
+  lcd.print(LcdPot7);
+  if (LcdPot7 < 100) {
+    lcd.setCursor(10, 1);
+    lcd.print(" ");
+  }
+  if (LcdPot7 < 10) {
+    lcd.setCursor(9, 1);
+    lcd.print(" ");
+  }
+  lcd.setCursor(11, 1);
+  lcd.print(" ");
+
+  lcd.setCursor(12, 1);
+  lcd.print(LcdPot8);
+  if (LcdPot8 < 100) {
+    lcd.setCursor(14, 1);
+    lcd.print(" ");
+  }
+  if (LcdPot8 < 10) {
+    lcd.setCursor(13, 1);
+    lcd.print(" ");
+  }
+
+}
